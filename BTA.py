@@ -8,6 +8,9 @@ class Example(wx.Frame):
 
         self.engine = pyttsx.init()
         self.engine.setProperty('rate', 130)
+
+        self.morning_alarm_enabled = False
+        self.night_alarm_enabled = True
         
     def InitUI(self):
         panel = wx.Panel(self)
@@ -29,11 +32,19 @@ class Example(wx.Frame):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         outer_grid = wx.GridSizer(1, 2, 0, 0)
-        inner_grid = wx.GridSizer(3, 2, 100, 100)
+        inner_grid = wx.GridSizer(3, 3, 100, 100)
 
-        inner_grid.AddMany([wx.StaticText(panel, label="bleh"), wx.StaticText(panel, label="bleh"),
+        # checkboxes to enable / disable alarms
+        self.night_alarm = wx.CheckBox(panel, label='Night Alarm')
+        self.morning_alarm = wx.CheckBox(panel, label='Morning Alarm')
+        self.night_alarm.Bind(wx.EVT_CHECKBOX, self.Toggle_Alarm)
+        self.morning_alarm.Bind(wx.EVT_CHECKBOX, self.Toggle_Alarm)
+  
+        inner_grid.AddMany([self.night_alarm, wx.StaticText(panel, label="bleh"),
+                            wx.StaticText(panel, label="bleh"), self.morning_alarm,
                             wx.StaticText(panel, label="bleh"), wx.StaticText(panel, label="bleh"),
-                            wx.StaticText(panel, label="bleh"), wx.StaticText(panel, label="bleh")])
+                            wx.StaticText(panel, label="bleh"), wx.StaticText(panel, label="bleh"),
+                            wx.StaticText(panel, label="bleh")])
         
         outer_grid.Add(inner_grid)
         outer_grid.Add(btn1, wx.ALIGN_CENTER)
@@ -59,6 +70,13 @@ class Example(wx.Frame):
         
     def Quit(self, e):
         self.Close()
+
+    def Toggle_Alarm(self, e):
+        sender = e.GetEventObject()
+        if sender == self.morning_alarm:
+            self.morning_alarm_enabled = sender.GetValue()
+        else:
+            self.night_alarm_enabled = sender.GetValue()
 
     def Nag(self, e):
         self.engine.say("It is time for you to go to bed")
