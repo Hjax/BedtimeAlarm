@@ -10,29 +10,48 @@ class Example(wx.Frame):
         self.engine.setProperty('rate', 130)
         
     def InitUI(self):
+        panel = wx.Panel(self)
+        panel.SetDoubleBuffered(True)
 
+        # Timer for updating the clock
         self.timer = wx.Timer(self, 1)
         self.Bind(wx.EVT_TIMER, self.UpdateDisplay, self.timer)
-        self.timer.Start(200)
+        self.timer.Start(50)
 
-        panel = wx.Panel(self)
+        # The test button
+        btn1 = wx.Button(panel, label='Test')
+        btn1.Bind(wx.EVT_BUTTON, self.Nag)
 
-        btn1 = wx.Button(panel, label='Nag', pos=(100, 250))
-
-        self.clock = wx.StaticText(panel, label=datetime.datetime.now().strftime('%H:%M:%S'), pos=(50, 25))
+        # The text box that contains the current time
+        self.clock = wx.StaticText(panel, label=datetime.datetime.now().strftime('%H:%M:%S'))
         font = wx.Font(128, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
         self.clock.SetFont(font)
 
-        btn1.Bind(wx.EVT_BUTTON, self.Nag)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        outer_grid = wx.GridSizer(1, 2, 0, 0)
+        inner_grid = wx.GridSizer(3, 2, 100, 100)
+
+        inner_grid.AddMany([wx.StaticText(panel, label="bleh"), wx.StaticText(panel, label="bleh"),
+                            wx.StaticText(panel, label="bleh"), wx.StaticText(panel, label="bleh"),
+                            wx.StaticText(panel, label="bleh"), wx.StaticText(panel, label="bleh")])
         
+        outer_grid.Add(inner_grid)
+        outer_grid.Add(btn1, wx.ALIGN_CENTER)
+        vbox.Add(self.clock, flag=wx.ALIGN_CENTER)
+        vbox.Add(outer_grid, 1, wx.EXPAND | wx.ALL)
+
+        panel.SetSizer(vbox)
+        
+
+        # Sets up the menus
         menubar = wx.MenuBar()
         fileMenu = wx.Menu()
         fitem = fileMenu.Append(wx.ID_EXIT, 'Quit', 'Quit application')
         menubar.Append(fileMenu, '&File')
         self.SetMenuBar(menubar)
-        
         self.Bind(wx.EVT_MENU, self.Quit, fitem)
 
+        # Final Init Stuff
         self.SetSize((800, 600))
         self.SetTitle('Bed Time Alarm Pre-Alpha')
         self.Centre()
