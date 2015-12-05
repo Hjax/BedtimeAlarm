@@ -13,14 +13,14 @@ class Example(wx.Frame):
 
         self.timer = wx.Timer(self, 1)
         self.Bind(wx.EVT_TIMER, self.UpdateDisplay, self.timer)
-        self.timer.Start(250)
+        self.timer.Start(200)
 
         panel = wx.Panel(self)
 
-        btn1 = wx.Button(panel, label='Nag', pos=(100, 200))
+        btn1 = wx.Button(panel, label='Nag', pos=(100, 250))
 
-        self.clock = wx.StaticText(panel, label=datetime.datetime.now().strftime('%H:%M:%S'))
-        font = wx.Font(32, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
+        self.clock = wx.StaticText(panel, label=datetime.datetime.now().strftime('%H:%M:%S'), pos=(50, 25))
+        font = wx.Font(128, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
         self.clock.SetFont(font)
 
         btn1.Bind(wx.EVT_BUTTON, self.Nag)
@@ -44,6 +44,8 @@ class Example(wx.Frame):
     def Nag(self, e):
         self.engine.say("It is time for you to go to bed")
         self.engine.runAndWait()
+
+    #   TODO have a fancy runthough animation for the test mode!
 
     def UpdateDisplay(self, e):
         self.clock.SetLabel(datetime.datetime.now().strftime('%H:%M:%S'))
