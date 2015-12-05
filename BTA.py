@@ -1,4 +1,4 @@
-import wx, pyttsx,time
+import wx, pyttsx, datetime
 
 class Example(wx.Frame):
     
@@ -9,22 +9,19 @@ class Example(wx.Frame):
         self.engine = pyttsx.init()
         self.engine.setProperty('rate', 130)
         
-    def InitUI(self):    
+    def InitUI(self):
+
+        self.timer = wx.Timer(self, 1)
+        self.Bind(wx.EVT_TIMER, self.UpdateDisplay, self.timer)
+        self.timer.Start(250)
 
         panel = wx.Panel(self)
 
-        hbox = wx.BoxSizer()
-        sizer = wx.GridSizer(2, 2, 2, 2)
+        btn1 = wx.Button(panel, label='Nag', pos=(100, 200))
 
-        btn1 = wx.Button(panel, label='Nag')
-        btn2 = wx.Button(panel, label='2')
-        btn3 = wx.Button(panel, label='3')
-        btn4 = wx.Button(panel, label='4')
-
-        sizer.AddMany([btn1, btn2, btn3, btn4])
-
-        hbox.Add(sizer, 0, wx.ALL, 15)
-        panel.SetSizer(hbox)
+        self.clock = wx.StaticText(panel, label=datetime.datetime.now().strftime('%H:%M:%S'))
+        font = wx.Font(32, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
+        self.clock.SetFont(font)
 
         btn1.Bind(wx.EVT_BUTTON, self.Nag)
         
@@ -47,6 +44,9 @@ class Example(wx.Frame):
     def Nag(self, e):
         self.engine.say("It is time for you to go to bed")
         self.engine.runAndWait()
+
+    def UpdateDisplay(self, e):
+        self.clock.SetLabel(datetime.datetime.now().strftime('%H:%M:%S'))
 
 def main():
     
