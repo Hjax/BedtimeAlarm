@@ -1,4 +1,4 @@
-import wx, pyttsx, datetime
+import wx, pyttsx, datetime, math
 
 class Example(wx.Frame):
     
@@ -121,29 +121,51 @@ class Example(wx.Frame):
             hours -= 1
         if hours < 0:
             hours += 24
-        return str(hours) + ":" + str(minutes) + ":" + str(seconds)
+        return str(hours).zfill(2) + ":" + str(minutes).zfill(2) + ":" + str(seconds).zfill(2)
 
     def pick_closest_time(self, a, b, c):
         time1 = self.time_between(a, b)
         time2 = self.time_between(a, c)
 
-        if time1[0:2] < time2[0:2]:
-            return time2
-        elif time1[0:2] > time2[0:2]:
+        if int(time1[0:2]) < int(time2[0:2]):
             return time1
-        elif time1[3:5] < time2[3:5]:
+        elif int(time1[0:2]) > int(time2[0:2]):
             return time2
-        elif time1[3:5] > time2[3:5]:
+        elif int(time1[3:5]) < int(time2[3:5]):
             return time1
-        elif time1[6:8] < time2[6:8]:
+        elif int(time1[3:5]) > int(time2[3:5]):
             return time2
-        elif time1[6:8] > time2[6:8]:
+        elif int(time1[6:8]) < int(time2[6:8]):
             return time1
+        elif int(time1[6:8]) > int(time2[6:8]):
+            return time2
         return time1
+
+    def add_times(self, a, b):
+        hours = int(a[0:2]) +  int(b[0:2])
+        minutes = int(a[3:5]) + int(b[3:5])
+        seconds = int(a[6:8]) + int(b[6:8])
+        if seconds >= 60:
+            seconds -= 60
+            minutes += 1
+        if minutes >= 60:
+            minutes -= 60
+            hours += 1
+        if hours >= 24:
+            hours -= 24
+        return str(hours).zfill(2) + ":" + str(minutes).zfill(2) + ":" + str(seconds).zfill(2)
+
+    def adjust_towards(self, a, b):
+        if self.time_between(a, b)[0:2] == '00' and int(self.time_between(a, b)[3:5]) < 5:
+            return b
+        if self.time_between(b, a)[0:2] == '00' and int(self.time_between(b, a)[3:5]) < 5:
+            return b                                              
+        return self.add_times(a, "23:55:00")
+
 
     def Apply_Settings(self, e):
         if self.time_is_valid(self.current_sleep_time.GetValue()) and self.time_is_valid(self.desired_sleep_time.GetValue()) and self.time_is_valid(self.wake_time.GetValue()):
-            self.alarms = [self.current_sleep_time.GetValue(), self.wake_time.GetValue()]
+            self.alarms = [self.current_sleep_time.GetValue() + ":00", self.wake_time.GetValue() + ":00", self.desired_sleep_time.GetValue() + ":00"]
             self.alarm_set = True
         else:
              wx.MessageBox('Please Enter Times In The Format: "hh:mm"', 'Error', wx.OK | wx.ICON_ERROR)
@@ -162,16 +184,16 @@ class Example(wx.Frame):
         self.clock.SetLabel(datetime.datetime.now().strftime('%I:%M:%S %p'))
 
         if self.alarm_set:
-            if datetime.datetime.now().strftime('%H:%M:%S') == ":00 ".join(self.alarms[0].split(" ")):
-                self.Say("Hello World")
-            elif datetime.datetime.now().strftime('%H:%M:%S') == ":00 ".join(self.alarms[1].split(" ")):
-                pass
-            self.time_to_alarm.SetLabel(self.pick_closest_time(datetime.datetime.now().strftime('%H:%M:%S'), self.alarms[0] + ":00", self.alarms[1] + ":00"))
+            if datetime.datetime.now().strftime('%H:%M:%S') == self.alarms[0] and self.night_alarm:
+                self.Say("It is time for you to go to bed")
+                self.alarms[0] = self.adjust_towards(self.alarms[0], self.alarms[2])
+                self.current_sleep_time.SetValue(self.alarms[0][0:5])   
+            elif datetime.datetime.now().strftime('%H:%M:%S') == self.add_times(self.alarms[1], self.alarms[0]) and self.morning_alarm:
+                self.Say("It is time for you to wake up")
+
+            self.time_to_alarm.SetLabel(self.pick_closest_time(datetime.datetime.now().strftime('%H:%M:%S'), self.alarms[0], self.add_times(self.alarms[1], self.alarms[0])))
 
             
-        
-            
-
 def main():
     
     ex = wx.App()
