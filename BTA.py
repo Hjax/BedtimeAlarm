@@ -70,7 +70,7 @@ class Example(wx.Frame):
         inner_grid.Add(wx.StaticText(panel, label=""))
         inner_grid.Add(apply_btn, flag=wx.ALIGN_CENTER)
         inner_grid.Add(wx.StaticText(panel, label="Time Until Next Alarm:"))
-        inner_grid.Add(wx.StaticText(panel, label="bleh"))
+        inner_grid.Add(self.time_to_alarm)
         
         outer_grid.Add(inner_grid)
         outer_grid.Add(btn1, flag=wx.ALIGN_CENTER)
@@ -107,11 +107,11 @@ class Example(wx.Frame):
 
     def time_is_valid(self, time):
         numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-        return time[0] in numbers and time[1] in numbers and time[2] == ':' and time[3] in numbers and time[4] in numbers and time[6:8] in ['AM', 'PM']
+        return time[0] in numbers and time[1] in numbers and time[2] == ':' and time[3] in numbers and time[4] in numbers
 
-    def time_between(self, a, b):
-        hours = int(a[0:2]) -  int(b[0:2)])
-        minutes = int(a[3:5]) - int(b[3:5)])
+    def time_between(self, b, a):
+        hours = int(a[0:2]) -  int(b[0:2])
+        minutes = int(a[3:5]) - int(b[3:5])
         seconds = int(a[6:8]) - int(b[6:8])
         if seconds < 0:
             seconds += 60
@@ -121,35 +121,32 @@ class Example(wx.Frame):
             hours -= 1
         if hours < 0:
             hours += 24
-        return hours + ":" + minutes + ":" + seconds
+        return str(hours) + ":" + str(minutes) + ":" + str(seconds)
 
     def pick_closest_time(self, a, b, c):
         time1 = self.time_between(a, b)
         time2 = self.time_between(a, c)
-        if time1[0:2] > time2[0:2]:
-            return time1
-        elif time1[0:2] < time2[0:2]:
+
+        if time1[0:2] < time2[0:2]:
             return time2
-        elif time1[3:5] > time2[3:5]:
+        elif time1[0:2] > time2[0:2]:
             return time1
         elif time1[3:5] < time2[3:5]:
             return time2
-        elif time1[6:8] > time2[6:8]:
+        elif time1[3:5] > time2[3:5]:
             return time1
         elif time1[6:8] < time2[6:8]:
             return time2
+        elif time1[6:8] > time2[6:8]:
+            return time1
         return time1
 
     def Apply_Settings(self, e):
         if self.time_is_valid(self.current_sleep_time.GetValue()) and self.time_is_valid(self.desired_sleep_time.GetValue()) and self.time_is_valid(self.wake_time.GetValue()):
-            if self.current_sleep_time.GetValue()[6:8].lower = 'am':
-                self.alarms.append(self.current_sleep_time.GetValue())
-            else:
-                self.alarms.append(self.current_sleep_time.GetValue()[0:2]+12 + self.current_sleep_time.GetValue()[2:6])
             self.alarms = [self.current_sleep_time.GetValue(), self.wake_time.GetValue()]
             self.alarm_set = True
         else:
-             wx.MessageBox('Please Enter Times In The Format: "hh:mm am/pm"', 'Error', wx.OK | wx.ICON_ERROR)
+             wx.MessageBox('Please Enter Times In The Format: "hh:mm"', 'Error', wx.OK | wx.ICON_ERROR)
 
     def Say(self, text):
         self.engine.say(text)
@@ -165,12 +162,13 @@ class Example(wx.Frame):
         self.clock.SetLabel(datetime.datetime.now().strftime('%I:%M:%S %p'))
 
         if self.alarm_set:
-            if datetime.datetime.now().strftime('%I:%M:%S %p') == ":00 ".join(self.alarms[0].split(" ")):
+            if datetime.datetime.now().strftime('%H:%M:%S') == ":00 ".join(self.alarms[0].split(" ")):
                 self.Say("Hello World")
-            elif datetime.datetime.now().strftime('%I:%M:%S %p') == ":00 ".join(self.alarms[1].split(" ")):
+            elif datetime.datetime.now().strftime('%H:%M:%S') == ":00 ".join(self.alarms[1].split(" ")):
                 pass
-            if self.pick_closest_time()
-            self.time
+            self.time_to_alarm.SetLabel(self.pick_closest_time(datetime.datetime.now().strftime('%H:%M:%S'), self.alarms[0] + ":00", self.alarms[1] + ":00"))
+
+            
         
             
 
