@@ -12,7 +12,9 @@ class Example(wx.Frame):
         self.morning_alarm_enabled = False
         self.night_alarm_enabled = True
 
+        self.alarm_set = False
 
+        self.alarms = []
         
     def InitUI(self):
         panel = wx.Panel(self)
@@ -20,8 +22,8 @@ class Example(wx.Frame):
 
         # Timer for updating the clock
         self.timer = wx.Timer(self, 1)
-        self.Bind(wx.EVT_TIMER, self.UpdateDisplay, self.timer)
-        self.timer.Start(50)
+        self.Bind(wx.EVT_TIMER, self.Update, self.timer)
+        self.timer.Start(1000)
 
         # The test button
         btn1 = wx.Button(panel, label='Test', size=(300, 300))
@@ -48,7 +50,7 @@ class Example(wx.Frame):
 
         # these are the text input fields for the times 
         self.wake_time = wx.TextCtrl(panel, -1, size=(140,-1))
-        self.wake_time.SetValue('Wake Up Time')
+        self.wake_time.SetValue('Hours of Sleep')
 
         self.current_sleep_time = wx.TextCtrl(panel, -1, size=(140,-1))
         self.current_sleep_time.SetValue('Current Bed Time')
@@ -100,17 +102,36 @@ class Example(wx.Frame):
         else:
             self.night_alarm_enabled = sender.GetValue()
 
+    def time_is_valid(self, time):
+        numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+        return time[0] in numbers and time[1] in numbers and time[2] == ':' and time[3] in numbers and time[4] in numbers and time[6:8] in ['AM', 'PM']
+
+
     def Apply_Settings(self, e):
-        pass
+        if self.time_is_valid(self.current_sleep_time.GetValue()) and self.time_is_valid(self.desired_sleep_time.GetValue()) and self.time_is_valid(self.wake_time.GetValue()):
+            self.alarms = [self.current_sleep_time.GetValue, self.wake_time]
+            self.alarm_set = True
+        else:
+             wx.MessageBox('Please Enter Times In The Format: "hh:mm am/pm"', 'Error', wx.OK | wx.ICON_ERROR)
+
+    def Say(self, text):
+        self.engine.say(text)
+        self.engine.runAndWait()
 
     def Nag(self, e):
-        self.engine.say("How dare you press the button")
+        self.engine.say("This is a test")
         self.engine.runAndWait()
 
     #   TODO have a fancy runthough animation for the test mode!
 
-    def UpdateDisplay(self, e):
+
+    def Update(self, e):
         self.clock.SetLabel(datetime.datetime.now().strftime('%I:%M:%S %p'))
+
+        if self.alarm_set:
+            if datetime.datetime.now().strftime('%I:%M:%S %p') == ":00 ".join(self.current_sleep_time.GetValue().split(" ")):
+                self.Say("Hello World")
+            
         
             
 
