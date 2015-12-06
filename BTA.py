@@ -41,6 +41,9 @@ class Example(wx.Frame):
         vbox = wx.BoxSizer(wx.VERTICAL)
         outer_grid = wx.GridSizer(1, 2, 0, 0)
         inner_grid = wx.GridSizer(3, 3, 100, 25)
+
+        # This Text Box is the time until the next alarm
+        self.time_to_alarm = wx.StaticText(panel, label="Alarm not set!")
         
         # checkboxes to enable / disable alarms
         self.night_alarm = wx.CheckBox(panel, label='Night Alarm')
@@ -106,10 +109,44 @@ class Example(wx.Frame):
         numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
         return time[0] in numbers and time[1] in numbers and time[2] == ':' and time[3] in numbers and time[4] in numbers and time[6:8] in ['AM', 'PM']
 
+    def time_between(self, a, b):
+        hours = int(a[0:2]) -  int(b[0:2)])
+        minutes = int(a[3:5]) - int(b[3:5)])
+        seconds = int(a[6:8]) - int(b[6:8])
+        if seconds < 0:
+            seconds += 60
+            minutes -= 1
+        if minutes < 0:
+            minutes += 60
+            hours -= 1
+        if hours < 0:
+            hours += 24
+        return hours + ":" + minutes + ":" + seconds
+
+    def pick_closest_time(self, a, b, c):
+        time1 = self.time_between(a, b)
+        time2 = self.time_between(a, c)
+        if time1[0:2] > time2[0:2]:
+            return time1
+        elif time1[0:2] < time2[0:2]:
+            return time2
+        elif time1[3:5] > time2[3:5]:
+            return time1
+        elif time1[3:5] < time2[3:5]:
+            return time2
+        elif time1[6:8] > time2[6:8]:
+            return time1
+        elif time1[6:8] < time2[6:8]:
+            return time2
+        return time1
 
     def Apply_Settings(self, e):
         if self.time_is_valid(self.current_sleep_time.GetValue()) and self.time_is_valid(self.desired_sleep_time.GetValue()) and self.time_is_valid(self.wake_time.GetValue()):
-            self.alarms = [self.current_sleep_time.GetValue, self.wake_time]
+            if self.current_sleep_time.GetValue()[6:8].lower = 'am':
+                self.alarms.append(self.current_sleep_time.GetValue())
+            else:
+                self.alarms.append(self.current_sleep_time.GetValue()[0:2]+12 + self.current_sleep_time.GetValue()[2:6])
+            self.alarms = [self.current_sleep_time.GetValue(), self.wake_time.GetValue()]
             self.alarm_set = True
         else:
              wx.MessageBox('Please Enter Times In The Format: "hh:mm am/pm"', 'Error', wx.OK | wx.ICON_ERROR)
@@ -119,8 +156,7 @@ class Example(wx.Frame):
         self.engine.runAndWait()
 
     def Nag(self, e):
-        self.engine.say("This is a test")
-        self.engine.runAndWait()
+        self.Say("Blah blah blah")
 
     #   TODO have a fancy runthough animation for the test mode!
 
@@ -129,9 +165,12 @@ class Example(wx.Frame):
         self.clock.SetLabel(datetime.datetime.now().strftime('%I:%M:%S %p'))
 
         if self.alarm_set:
-            if datetime.datetime.now().strftime('%I:%M:%S %p') == ":00 ".join(self.current_sleep_time.GetValue().split(" ")):
+            if datetime.datetime.now().strftime('%I:%M:%S %p') == ":00 ".join(self.alarms[0].split(" ")):
                 self.Say("Hello World")
-            
+            elif datetime.datetime.now().strftime('%I:%M:%S %p') == ":00 ".join(self.alarms[1].split(" ")):
+                pass
+            if self.pick_closest_time()
+            self.time
         
             
 
