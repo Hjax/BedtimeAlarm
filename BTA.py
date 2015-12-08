@@ -1,7 +1,7 @@
-import wx, pyttsx, datetime, math
+import wx, pyttsx, datetime, time
+
 
 class Example(wx.Frame):
-    
     def __init__(self, *args, **kwargs):
         super(Example, self).__init__(*args, **kwargs) 
         self.InitUI()
@@ -13,6 +13,11 @@ class Example(wx.Frame):
         self.night_alarm_enabled = True
 
         self.alarm_set = False
+        self.running_demo = False
+
+        self.pause_time = 0
+
+        self.current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
         self.alarms = []
         
@@ -34,7 +39,7 @@ class Example(wx.Frame):
         apply_btn.Bind(wx.EVT_BUTTON, self.Apply_Settings)
 
         # The text box that contains the current time
-        self.clock = wx.StaticText(panel, label=datetime.datetime.now().strftime('%I:%M:%S %p'))
+        self.clock = wx.StaticText(panel, label=datetime.datetime.now().strftime('%H:%M:%S'))
         font = wx.Font(100, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
         self.clock.SetFont(font)
 
@@ -128,18 +133,18 @@ class Example(wx.Frame):
         time2 = self.time_between(a, c)
 
         if int(time1[0:2]) < int(time2[0:2]):
-            return time1
+            return b
         elif int(time1[0:2]) > int(time2[0:2]):
-            return time2
+            return c
         elif int(time1[3:5]) < int(time2[3:5]):
-            return time1
+            return b
         elif int(time1[3:5]) > int(time2[3:5]):
-            return time2
+            return c
         elif int(time1[6:8]) < int(time2[6:8]):
-            return time1
+            return b
         elif int(time1[6:8]) > int(time2[6:8]):
-            return time2
-        return time1
+            return c
+        return b
 
     def add_times(self, a, b):
         hours = int(a[0:2]) +  int(b[0:2])
@@ -175,23 +180,45 @@ class Example(wx.Frame):
         self.engine.runAndWait()
 
     def Nag(self, e):
-        self.Say("Blah blah blah")
+        self.timer.Stop()
+        self.running_demo = True
+        self.timer.Start(1)
 
     #   TODO have a fancy runthough animation for the test mode!
 
 
     def Update(self, e):
-        self.clock.SetLabel(datetime.datetime.now().strftime('%I:%M:%S %p'))
+        if (time.time() - self.pause_time) > 2:
+            if self.running_demo:
+                if self.alarm_set:
+                    next_event = self.pick_closest_time(self.current_time, datetime.datetime.now().strftime('%H:%M:%S'), self.pick_closest_time(self.current_time, self.alarms[0], self.add_times(self.alarms[1], self.alarms[0])))
+                else:
+                    next_event = datetime.datetime.now().strftime('%H:%M:%S')
+                if int(self.time_between(self.current_time, next_event)[0:2]) >= 1:
+                    self.current_time = self.add_times(self.current_time, "00:11:00")
+                if int(self.time_between(self.current_time, next_event)[3:5]) >= 1:
+                    self.current_time = self.add_times(self.current_time, "00:00:11")
+                else:
+                    self.current_time = self.add_times(self.current_time, "00:00:01")
+                if self.current_time == datetime.datetime.now().strftime('%H:%M:%S'):
+                    self.running_demo = False
+                    self.timer.Stop()
+                    self.timer.Start(1000)
+            else: 
+                self.current_time = datetime.datetime.now().strftime('%H:%M:%S')
+            self.clock.SetLabel(self.current_time)
 
-        if self.alarm_set:
-            if datetime.datetime.now().strftime('%H:%M:%S') == self.alarms[0] and self.night_alarm:
-                self.Say("It is time for you to go to bed")
-                self.alarms[0] = self.adjust_towards(self.alarms[0], self.alarms[2])
-                self.current_sleep_time.SetValue(self.alarms[0][0:5])   
-            elif datetime.datetime.now().strftime('%H:%M:%S') == self.add_times(self.alarms[1], self.alarms[0]) and self.morning_alarm:
-                self.Say("It is time for you to wake up")
+            if self.alarm_set:
+                if self.current_time == self.alarms[0] and self.night_alarm:
+                    self.pause_time = time.time()
+                    self.Say("It is time for you to go to bed")
+                    self.alarms[0] = self.adjust_towards(self.alarms[0], self.alarms[2])
+                    self.current_sleep_time.SetValue(self.alarms[0][0:5])   
+                elif self.current_time == self.add_times(self.alarms[1], self.alarms[0]) and self.morning_alarm:
+                    self.pause_time = time.time()
+                    self.Say("It is time for you to wake up")
 
-            self.time_to_alarm.SetLabel(self.pick_closest_time(datetime.datetime.now().strftime('%H:%M:%S'), self.alarms[0], self.add_times(self.alarms[1], self.alarms[0])))
+                self.time_to_alarm.SetLabel(self.time_between(self.current_time, self.pick_closest_time(datetime.datetime.now().strftime('%H:%M:%S'), self.alarms[0], self.add_times(self.alarms[1], self.alarms[0]))))
 
             
 def main():
