@@ -217,7 +217,7 @@ class BTA(wx.Frame):
                     self.pause_time = time.time()
                     self.Say("It is time for you to go to bed")
                     self.night_alarm = self.adjust_towards(self.night_alarm, self.desired_sleep_time.GetValue())
-                    self.current_sleep_time.SetValue(self.night_alarm[0:5])   
+                    self.current_sleep_time.SetValue(self.night_alarm)   
                 if self.current_time == self.morning_alarm and self.morning_alarm_enabled:
                     self.pause_time = time.time()
                     self.Say("It is time for you to wake up")
