@@ -1,16 +1,20 @@
 import wx, pyttsx, datetime, time
 
 
-class Example(wx.Frame):
+
+class BTA(wx.Frame):
     def __init__(self, *args, **kwargs):
-        super(Example, self).__init__(*args, **kwargs) 
+        super(BTA, self).__init__(*args, **kwargs) 
         self.InitUI()
 
         self.engine = pyttsx.init()
         self.engine.setProperty('rate', 130)
 
-        self.morning_alarm_enabled = False
+        self.morning_alarm_enabled = True
         self.night_alarm_enabled = True
+
+        self.morning_alarm = "00:00:00"
+        self.night_alarm = "00:00:00"
 
         self.alarm_set = False
         self.running_demo = False
@@ -19,7 +23,6 @@ class Example(wx.Frame):
 
         self.current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
-        self.alarms = []
         
     def InitUI(self):
         panel = wx.Panel(self)
@@ -31,7 +34,7 @@ class Example(wx.Frame):
         self.timer.Start(1000)
 
         # The test button
-        btn1 = wx.Button(panel, label='Test', size=(300, 300))
+        btn1 = wx.Button(panel, label='Try Me', size=(300, 300))
         btn1.Bind(wx.EVT_BUTTON, self.Nag)
 
         # The apply settings button
@@ -168,9 +171,10 @@ class Example(wx.Frame):
         return self.add_times(a, "23:55:00")
 
 
-    def Apply_Settings(self, e):
+    def Apply_Settings(self, e): 
         if self.time_is_valid(self.current_sleep_time.GetValue()) and self.time_is_valid(self.desired_sleep_time.GetValue()) and self.time_is_valid(self.wake_time.GetValue()):
-            self.alarms = [self.current_sleep_time.GetValue() + ":00", self.wake_time.GetValue() + ":00", self.desired_sleep_time.GetValue() + ":00"]
+            self.morning_alarm = self.add_times(self.wake_time.GetValue(), self.desired_sleep_time.GetValue())
+            self.night_alarm = self.current_sleep_time.GetValue()
             self.alarm_set = True
         else:
              wx.MessageBox('Please Enter Times In The Format: "hh:mm"', 'Error', wx.OK | wx.ICON_ERROR)
@@ -191,7 +195,7 @@ class Example(wx.Frame):
         if (time.time() - self.pause_time) > 2:
             if self.running_demo:
                 if self.alarm_set:
-                    next_event = self.pick_closest_time(self.current_time, datetime.datetime.now().strftime('%H:%M:%S'), self.pick_closest_time(self.current_time, self.alarms[0], self.add_times(self.alarms[1], self.alarms[0])))
+                    next_event = self.pick_closest_time(self.current_time, datetime.datetime.now().strftime('%H:%M:%S'), self.pick_closest_time(self.current_time, self.night_alarm, self.morning_alarm))
                 else:
                     next_event = datetime.datetime.now().strftime('%H:%M:%S')
                 if int(self.time_between(self.current_time, next_event)[0:2]) >= 1:
@@ -209,22 +213,22 @@ class Example(wx.Frame):
             self.clock.SetLabel(self.current_time)
 
             if self.alarm_set:
-                if self.current_time == self.alarms[0] and self.night_alarm:
+                if self.current_time == self.night_alarm and self.night_alarm_enabled:
                     self.pause_time = time.time()
                     self.Say("It is time for you to go to bed")
-                    self.alarms[0] = self.adjust_towards(self.alarms[0], self.alarms[2])
-                    self.current_sleep_time.SetValue(self.alarms[0][0:5])   
-                elif self.current_time == self.add_times(self.alarms[1], self.alarms[0]) and self.morning_alarm:
+                    self.night_alarm = self.adjust_towards(self.night_alarm, self.desired_sleep_time.GetValue())
+                    self.current_sleep_time.SetValue(self.night_alarm[0:5])   
+                if self.current_time == self.morning_alarm and self.morning_alarm_enabled:
                     self.pause_time = time.time()
                     self.Say("It is time for you to wake up")
 
-                self.time_to_alarm.SetLabel(self.time_between(self.current_time, self.pick_closest_time(datetime.datetime.now().strftime('%H:%M:%S'), self.alarms[0], self.add_times(self.alarms[1], self.alarms[0]))))
+                self.time_to_alarm.SetLabel(self.time_between(self.current_time, self.pick_closest_time(self.current_time, self.night_alarm, self.morning_alarm)))
 
             
 def main():
     
     ex = wx.App()
-    Example(None)
+    BTA(None)
     ex.MainLoop()    
 
 
