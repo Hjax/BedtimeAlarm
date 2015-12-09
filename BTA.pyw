@@ -1,6 +1,13 @@
-import wx, pyttsx, datetime, time
+import wx, pyttsx, datetime, time, random
 
-
+get_up = ["It is time to get up",
+          "Wakey Wakey Sleepy Head",
+          "If you do not get out of bed this instant you are going to be sorry",
+          "Its a bright and sunny day, well... maybe not, why don't you get up and check?"]
+bedtime = ["It is time to go to bed",
+           "If you don't go to bed now, you will feel tired in the morning",
+           "You are getting very sleepy",
+           "Ladies and Gentleman, thank you and GOODNIGHT"]
 
 class BTA(wx.Frame):
     def __init__(self, *args, **kwargs):
@@ -20,6 +27,8 @@ class BTA(wx.Frame):
         self.running_demo = False
 
         self.pause_time = 0
+
+        self.name = "Easter Egg"
 
         self.current_time = datetime.datetime.now().strftime('%H:%M:%S')
 
@@ -98,7 +107,7 @@ class BTA(wx.Frame):
 
         # Final Init Stuff
         self.SetSize((800, 600))
-        self.SetTitle('Bed Time Alarm Pre-Alpha')
+        self.SetTitle('BeTA Pre-Alpha')
         self.SetWindowStyle(wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER)
         self.Centre()
         self.Show(True)
@@ -173,7 +182,7 @@ class BTA(wx.Frame):
 
     def Apply_Settings(self, e): 
         if self.time_is_valid(self.current_sleep_time.GetValue()) and self.time_is_valid(self.desired_sleep_time.GetValue()) and self.time_is_valid(self.wake_time.GetValue()):
-            self.morning_alarm = self.add_times(self.wake_time.GetValue(), self.desired_sleep_time.GetValue())
+            self.morning_alarm = self.add_times(self.wake_time.GetValue(), self.current_sleep_time.GetValue())
             self.night_alarm = self.current_sleep_time.GetValue()
             self.alarm_set = True
         else:
@@ -188,10 +197,17 @@ class BTA(wx.Frame):
         self.running_demo = True
         self.timer.Start(1)
 
-    #   TODO have a fancy runthough animation for the test mode!
-
+    def ask(self, message, default_value=''):
+        dlg = wx.TextEntryDialog(None, message, defaultValue=default_value)
+        dlg.ShowModal()
+        result = dlg.GetValue()
+        dlg.Destroy()
+        return result
 
     def Update(self, e):
+        if self.name == "Easter Egg":
+            self.name = ""
+            self.name = self.ask("What is your name?")
         if (time.time() - self.pause_time) > 2:
             if self.running_demo:
                 if self.alarm_set:
@@ -215,14 +231,21 @@ class BTA(wx.Frame):
             if self.alarm_set:
                 if self.current_time == self.night_alarm and self.night_alarm_enabled:
                     self.pause_time = time.time()
-                    self.Say("It is time for you to go to bed")
+                    self.Say("Hey " + self.name + " " + random.choice(bedtime))
+                    self.morning_alarm = self.add_times(self.wake_time.GetValue(), self.current_sleep_time.GetValue())
                     self.night_alarm = self.adjust_towards(self.night_alarm, self.desired_sleep_time.GetValue())
                     self.current_sleep_time.SetValue(self.night_alarm)   
                 if self.current_time == self.morning_alarm and self.morning_alarm_enabled:
                     self.pause_time = time.time()
-                    self.Say("It is time for you to wake up")
-
-                self.time_to_alarm.SetLabel(self.time_between(self.current_time, self.pick_closest_time(self.current_time, self.night_alarm, self.morning_alarm)))
+                    self.Say("Hey " + self.name + " " + random.choice(get_up))
+                if self.morning_alarm_enabled and self.night_alarm_enabled:
+                    self.time_to_alarm.SetLabel(self.time_between(self.current_time, self.pick_closest_time(self.current_time, self.night_alarm, self.morning_alarm)))
+                elif self.morning_alarm_enabled:
+                    self.time_to_alarm.SetLabel(self.time_between(self.current_time, self.morning_alarm))
+                elif self.night_alarm_enabled:
+                    self.time_to_alarm.SetLabel(self.time_between(self.current_time, self.night_alarm))
+                else:
+                    self.time_to_alarm.SetLabel("Alarm not set!")
 
             
 def main():
